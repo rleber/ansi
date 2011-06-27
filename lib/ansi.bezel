@@ -1,6 +1,6 @@
 # ANSI Module provides a Bezel interface as follows:
 #
-#     ANSI = lib('ansi', '1.2.6')
+#     ANSI = lib('ansi', '1.2.7')
 #
 #     module MyAPP
 #       include ANSI

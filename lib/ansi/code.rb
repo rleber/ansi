@@ -65,6 +65,7 @@ module ANSI
   #     magenta
   #     cyan
   #     white
+  #     none
   #
   #     on_black
   #     on_red
@@ -76,6 +77,8 @@ module ANSI
   #     on_white
   #
   # In addition there are color combinations like +red_on_white+.
+  # And, all colors allow the qualifier bright, as in +bright_red+,
+  # +on_bright_red+, or +blue_on_bright_yellow+
   #
   # == Acknowledgement
   #
@@ -113,7 +116,8 @@ module ANSI
     BLUE       = "\e[34m"
     MAGENTA    = "\e[35m"
     CYAN       = "\e[36m"
-    WHITE      = "\e[37m"
+    WHITE      = "\e[37m" # On a Mac, this is actually light gray
+    NONE       = "\e[38m" # On a Mac, this is a bright white
 
     ON_BLACK   = "\e[40m"
     ON_RED     = "\e[41m"
@@ -123,6 +127,7 @@ module ANSI
     ON_MAGENTA = "\e[45m"
     ON_CYAN    = "\e[46m"
     ON_WHITE   = "\e[47m"
+    ON_NONE    = "\e[48m"
 
     # Save current cursor positon.
     SAVE       = "\e[s"
@@ -163,14 +168,28 @@ module ANSI
       END
     end
 
+    def self.base_colors
+      %w{black red green yellow blue magenta cyan white none}
+    end
+    
+    # Dynamically create bright colors
     def self.colors
-      %w{black red green yellow blue magenta cyan white}
+      base_colors + base_colors.map{|color| "bright_#{color}"}
+    end
+    
+    # Dynamically create bright color constants
+    colors.each do |color|
+      module_eval <<-END, __FILE__, __LINE__
+        BRIGHT_\#{color.upcase} = \#{color.upcase}.sub(/\d+/){|code| (code.to_i + 60).to_s} 
+        ON_BRIGHT_\#{color.upcase} = ON_\#{color.upcase}.sub(/\d+/){|code| (code.to_i + 60).to_s} 
+      END
     end
 
     # Dynamically create color methods.
 
-    colors.each do |color|
+    extended_colors.each do |color|
       module_eval <<-END, __FILE__, __LINE__
+      
         def #{color}(string=nil)
           if string
             return string unless $ansi
